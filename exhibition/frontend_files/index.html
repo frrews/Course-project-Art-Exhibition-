@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивная выставка | ArtGallery</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<header class="navbar">
+    <div class="logo" onclick="switchView('home')">🎨 ArtGallery</div>
+    <div class="auth-buttons">
+        <div id="guestMenu">
+            <button onclick="openAuthModal('login')">Войти</button>
+            <button onclick="openAuthModal('register')" class="btn-outline">Регистрация</button>
+        </div>
+        <div id="userMenu" style="display: none;">
+            <span id="userNameDisplay" class="user-greeting"></span>
+            <button onclick="switchView('profile')" class="btn-outline">❤️ Кабинет</button>
+            <button onclick="logout()">Выйти</button>
+        </div>
+    </div>
+</header>
+
+<section class="search-panel" aria-label="Поиск и фильтры">
+    <div class="search-panel-inner">
+        <div class="search-row">
+            <div class="search-main">
+                <input type="search" id="searchInput" placeholder="Поиск по названию, автору или описанию…"
+                       autocomplete="off" enterkeyhint="search">
+                <button type="button" class="btn-search-primary" onclick="applyGallerySearch()" title="Найти">🔍 Найти</button>
+            </div>
+            <button type="button" class="btn-filters-toggle" id="filtersToggle" onclick="toggleFiltersPanel()" aria-expanded="false">
+                ⚙ Фильтры <span id="filtersBadge" class="filters-badge hidden"></span>
+            </button>
+        </div>
+        <div id="filtersPanel" class="filters-panel hidden">
+            <div class="filter-field">
+                <label for="filterStyle">Стиль</label>
+                <select id="filterStyle">
+                    <option value="">Все стили</option>
+                </select>
+            </div>
+            <div class="filter-field filter-field-grow">
+                <label for="filterAuthor">Автор содержит</label>
+                <input type="text" id="filterAuthor" placeholder="Часть имени или фамилии" autocomplete="off">
+            </div>
+            <div class="filter-field">
+                <label for="filterSort">Сортировка</label>
+                <select id="filterSort">
+                    <option value="TITLE_ASC">Название А → Я</option>
+                    <option value="TITLE_DESC">Название Я → А</option>
+                    <option value="AUTHOR_ASC">Автор А → Я</option>
+                    <option value="AUTHOR_DESC">Автор Я → А</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="button" class="btn-secondary" onclick="resetGalleryFilters()">Сбросить всё</button>
+            </div>
+        </div>
+        <p class="search-results-hint" id="searchResultsHint"></p>
+    </div>
+</section>
+
+<main class="home-main" id="homeView">
+    <div class="loader" id="galleryLoader">Загрузка шедевров…</div>
+    <div class="gallery-container" id="galleryGrid"></div>
+</main>
+
+<main class="profile-container" id="profileView" style="display: none;">
+    <h2>Личный кабинет</h2>
+    <nav class="profile-tabs" role="tablist">
+        <button type="button" class="profile-tab profile-tab-active" id="profileTabFavoritesBtn" role="tab" aria-selected="true" onclick="switchProfileTab('favorites')">❤️ Избранное</button>
+        <button type="button" class="profile-tab" id="profileTabCommentsBtn" role="tab" aria-selected="false" onclick="switchProfileTab('comments')">💬 Мои комментарии</button>
+    </nav>
+    <section id="profilePanelFavorites" class="profile-panel" role="tabpanel">
+        <h3 class="profile-panel-title">Моя коллекция шедевров</h3>
+        <div class="gallery-container" id="favoritesGallery"></div>
+    </section>
+    <section id="profilePanelComments" class="profile-panel" role="tabpanel" style="display: none;">
+        <div class="my-comments-list" id="myCommentsList">
+            <p class="comments-loading">Загрузка комментариев…</p>
+        </div>
+    </section>
+</main>
+
+<div id="authModal" class="modal">
+    <div class="auth-box">
+        <span class="close-btn" onclick="closeAuthModal()">&times;</span>
+        <h2 id="authTitle">Вход</h2>
+        <input type="email" id="authEmail" placeholder="Email (например: user@mail.com)">
+        <input type="text" id="authUsername" placeholder="Логин (только для регистрации)" style="display: none;">
+        <input type="password" id="authPassword" placeholder="Пароль">
+        <button type="button" id="authSubmitBtn" onclick="submitAuth()">Войти</button>
+        <p id="authHint" class="auth-hint"></p>
+    </div>
+</div>
+
+<div id="verifyModal" class="modal">
+    <div class="auth-box verify-box">
+        <span class="close-btn" onclick="closeVerifyModal()">&times;</span>
+        <h2>Подтверждение email</h2>
+        <p class="verify-lead">Введите 6-значный код из письма, отправленного на <strong id="verifyEmailDisplay"></strong></p>
+        <input type="text" id="verifyOtpInput" inputmode="numeric" maxlength="6" pattern="[0-9]*" autocomplete="one-time-code" placeholder="000000" class="otp-input">
+        <button type="button" id="verifySubmitBtn" onclick="submitVerification()">Подтвердить</button>
+        <p id="verifyHint" class="auth-hint"></p>
+    </div>
+</div>
+
+<div id="paintingModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closePaintingModal()">&times;</span>
+        <div class="modal-body">
+            <div class="modal-image-section">
+                <img id="modalImage" src="" alt="Картина">
+                <h2 id="modalTitle">Название</h2>
+                <p class="author">Автор: <span id="modalAuthor"></span></p>
+                <p class="style-tag" id="modalStyle">Стиль</p>
+                <p id="modalDesc" class="description"></p>
+                <button id="favoriteBtn" class="btn-favorite" onclick="toggleFavorite()">❤️ В избранное</button>
+                <button type="button" class="btn-discussion" onclick="openDiscussionModal()">💬 Перейти в обсуждение</button>
+            </div>
+            <div class="modal-chat-section">
+                <h3>🤖 ИИ-Гид</h3>
+                <div class="chat-box" id="chatBox">
+                    <div class="message ai-message">Привет! Я готов рассказать об этой картине.</div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Ваш вопрос..." autocomplete="off">
+                    <button type="button" class="btn-chat-send" onclick="sendMessage()">Отправить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="discussionModal" class="modal modal-discussion" style="display: none;">
+    <div class="modal-content discussion-content">
+        <span class="close-btn" onclick="closeDiscussionModal()">&times;</span>
+        <div class="discussion-header">
+            <h2 id="discussionTitle">Обсуждение</h2>
+            <p class="discussion-subtitle" id="discussionSubtitle"></p>
+        </div>
+        <div class="comments-list" id="commentsList">
+            <p class="comments-loading">Загрузка комментариев…</p>
+        </div>
+        <div class="comment-compose">
+            <textarea id="commentInput" rows="3" maxlength="2000" placeholder="Напишите комментарий…"></textarea>
+            <button type="button" id="commentSubmitBtn" class="btn-comment-send" onclick="submitComment()">Отправить</button>
+            <p id="commentHint" class="auth-hint"></p>
+        </div>
+    </div>
+</div>
+
+<script src="app.js?v=nginx-api"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+services:
+  database:
+    image: mysql:8.0
+    container_name: art_mysql_db
+    environment:
+      MYSQL_DATABASE: art_db
+      MYSQL_USER: art_user
+      MYSQL_PASSWORD: db_password
+      MYSQL_ROOT_PASSWORD: super_secret_root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    build: .
+    container_name: art_backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/art_db?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/api/paintings/meta/styles"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 120s
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: art_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend_files:/usr/share/nginx/html:ro
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

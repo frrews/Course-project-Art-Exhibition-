@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: exhibition
+  datasource:
+    url: jdbc:mysql://database:3306/art_db?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+    username: art_user
+    password: db_password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    repair-on-migrate: true
+    locations: classpath:db/migration
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: unforgettableunf2006@gmail.com
+    password: rpbppqbdzgcxvwqn
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+
+application:
+  security:
+    jwt:
+      secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      expiration: 86400000
+  registration:
+    pending-expiration-hours: 24
+
+gigachat:
+  oauth-url: https://ngw.devices.sberbank.ru:9443/api/v2/oauth
+  chat-url: https://gigachat.devices.sberbank.ru/api/v1/chat/completions
+  authorization-key: ${GIGACHAT_AUTH_KEY:Nzg2NDY3Y2QtNDNjMS00ODAzLWI5NWUtYmJhMTg1MmUwYmEzOjVhMzI2MmJhLTMwNzgtNGIwOS1iNjc3LTY1M2UzNDE1YWU2Yg==}
+  rq-uid: ${GIGACHAT_RQUID:dea767c3-4e9e-46ad-8f7f-9def5b505503}
+  model: GigaChat
+  insecure-ssl: true
